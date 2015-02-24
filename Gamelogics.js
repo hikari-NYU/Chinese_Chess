@@ -9,19 +9,24 @@ function checkMove(item,origPos,destPos,Board) {
 
 function checkItemMove(item,origPos,destPos,Board) {
 	var itemMove;
-	if(item<0) {
-		itemMove=[origPos[0]-destPos[0],origPos[1]-destPos[1]];
+	if(item==7 || item==-7) {
+		if(item<0) {
+			itemMove=[origPos[0]-destPos[0],origPos[1]-destPos[1]];
+		}
+		else {
+			itemMove=[destPos[0]-origPos[0],destPos[1]-origPos[1]];
+		}
 	}
 	else {
 		itemMove=[destPos[0]-origPos[0],destPos[1]-origPos[1]];
 	}
-	if(itemMove[0]==itemMove[1]==0) {
+	if(itemMove[0]==0 && itemMove[1]==0) {
 		return false;
 	}
 	if(item==7 && origPos[1]>=5) {
 		item=8;
 	}
-	if(item=-7 && origPos[1]<=4) {
+	if(item==-7 && origPos[1]<=4) {
 		item=8;
 	}
 	var check={};
@@ -35,7 +40,7 @@ function checkItemMove(item,origPos,destPos,Board) {
 	check[8]=checkSuperSoldier;
 	var valid=check[Math.abs(item)](itemMove,origPos,destPos,Board);
 	if(valid == true) {
-		if(Board[origPos[0],origPos[1]]*Board[destPos[0],destPos[1]]>0) {
+		if(Board[origPos[1]][origPos[0]]*Board[destPos[1]][destPos[0]]>0) {
 			valid=false;
 		}
 	}
@@ -77,7 +82,7 @@ function checkElephant(itemMove,origPos,destPos,Board) {
 	if(Math.abs(itemMove[0])!=2 || Math.abs(itemMove[1])!=2) {
 		return false
 	}
-	if(Board[(origPos[0]+itemMove[0]/2),(origPos[1]+itemMove[1]/2)]!=0) {
+	if(Board[(origPos[1]+itemMove[1]/2)][(origPos[0]+itemMove[0]/2)]!=0) {
 		return false
 	}
 	return true;
@@ -88,12 +93,12 @@ function checkHorse(itemMove,origPos,destPos,Board) {
 		return false;
 	}
 	if(Math.abs(itemMove[0])==2) {
-		if(Board[(origPos[0]+itemMove[0]/2),origPos[1]]!=0) {
+		if(Board[origPos[1]][(origPos[0]+itemMove[0]/2)]!=0) {
 			return false
 		}
 	}
 	if(Math.abs(itemMove[1])==2) {
-		if(Board[origPos[0],(origPos[1]+itemMove[1]/2)]!=0) {
+		if(Board[(origPos[1]+itemMove[1]/2)][origPos[0]]!=0) {
 			return false;
 		}
 	}
@@ -107,14 +112,14 @@ function checkChariot(itemMove,origPos,destPos,Board) {
 	if(itemMove[0]==0) {
 		if(itemMove[1]>0) {
 			for(var i=origPos[1]+1;i<destPos[1];i++) {
-				if(Board[itemMove[0],i]!=0) {
+				if(Board[i][origPos[0]]!=0) {
 					return false;
 				}
 			}
 		}
 		else {
 			for(var i=origPos[1]-1;i>destPos[1];i--) {
-				if(Board[itemMove[0],i]!=0) {
+				if(Board[i][origPos[0]]!=0) {
 					return false;
 				}
 			}
@@ -123,14 +128,14 @@ function checkChariot(itemMove,origPos,destPos,Board) {
 	if(itemMove[1]==0) {
 		if(itemMove[0]>0) {
 			for(var i=origPos[0]+1;i<destPos[0];i++) {
-				if(Board[i,itemMove[1]]!=0) {
+				if(Board[origPos[1]][i]!=0) {
 					return false;
 				}
 			}
 		}
 		else {
 			for(var i=origPos[0]-1;i>destPos[0];i--) {
-				if(Board[i,itemMove[1]]!=0) {
+				if(Board[origPos[1]][i]!=0) {
 					return false;
 				}
 			}
@@ -147,14 +152,14 @@ function checkCannon(itemMove,origPos,destPos,Board) {
 	if(itemMove[0]==0) {
 		if(itemMove[1]>0) {
 			for(var i=origPos[1]+1;i<destPos[1];i++) {
-				if(Board[itemMove[0],i]!=0) {
+				if(Board[i][origPos[0]]!=0) {
 					intermediate++;
 				}
 			}
 		}
 		else {
 			for(var i=origPos[1]-1;i>destPos[1];i--) {
-				if(Board[itemMove[0],i]!=0) {
+				if(Board[i][origPos[0]]!=0) {
 					intermediate++;
 				}
 			}
@@ -163,20 +168,20 @@ function checkCannon(itemMove,origPos,destPos,Board) {
 	if(itemMove[1]==0) {
 		if(itemMove[0]>0) {
 			for(var i=origPos[0]+1;i<destPos[0];i++) {
-				if(Board[i,itemMove[1]]!=0) {
+				if(Board[origPos[1]][i]!=0) {
 					intermediate++;
 				}
 			}
 		}
 		else {
 			for(var i=origPos[0]-1;i>destPos[0];i--) {
-				if(Board[i,itemMove[1]]!=0) {
+				if(Board[origPos[1]][i]!=0) {
 					intermediate++;
 				}
 			}
 		}
 	}
-	if(Board[destPos[0],destPos[1]]*Board[origPos[0],origPos[1]]<0) {
+	if(Board[destPos[1]][destPos[0]]*Board[origPos[1]][origPos[0]]<0) {
 		if(intermediate!=1) {
 			return false;
 		}
@@ -207,22 +212,28 @@ function checkSuperSoldier(itemMove,origPos,destPos,Board) {
 }
 
 function move(item,origPos,destPos,Board,turn) {
+	//Not moved: false
+	//Terminated: 1/-1
+	//Moved: true
 	if(item*turn<0) {
-		return undefined;
-	}
-	var movible=checkMove(item,origPos,destPos,Board);
-	var destItem=Board[destPos[0],destPos[1]];
-	if(movible==true) {
-		Board[destPos[0],destPos[1]]=Board[origPos[0],origPos[1]];
-		Board[origPos[0],origPos[1]]=0;
-		if(Math.abs(destItem)==1) {
-			//Game ends
-			return destItem;
-		}
 		return false;
 	}
+	var movible=checkMove(item,origPos,destPos,Board);
+	var destItem=Board[destPos[1]][destPos[0]];
+	//console.log(destItem);
+	if(movible==true) {
+		Board[destPos[1]][destPos[0]]=Board[origPos[1]][origPos[0]];
+		Board[origPos[1]][origPos[0]]=0;
+		if(Math.abs(destItem)==1) {
+			//Game ends
+			var destTmp=destItem;
+			terminate(destTmp);
+			return destItem;
+		}
+		return true;
+	}
 	else {
-		return undefined;
+		return false;
 	}
 }
 
@@ -242,7 +253,7 @@ function initialize() {
 }
 
 function terminate(colorInd) {
-	if(colorInd>0) {
+	if(colorInd<0) {
 		console.log("Red wins!");
 	}
 	else {
@@ -250,12 +261,15 @@ function terminate(colorInd) {
 	}
 }
 
+
+
+/*
 var turn=1;
 var Board=initialize();
 var res;
 console.log("Game starts!");
 //Play
-/*
+
 do {
 	console.log((turn>0)?"Red's turn!":"Black's turn!");
 	var origPos={},destPos={};
@@ -264,7 +278,8 @@ do {
 		turn=-turn;
 	}
 } while(res!=1 && res!=-1);
-*/
+
 terminate(res);
 
 console.log(Board)
+*/
